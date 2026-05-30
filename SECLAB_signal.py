@@ -614,7 +614,7 @@ def test_waveview () :
     """        
     import SECLAB_pcm
     #path="230.30Mhz.pcm.real.160k.16t"
-    path="/home/hyun/psk8_8k_16t.pcm" # samp 8k
+    path="/home/hyun/works/wvt/psk8_8k_16t.pcm" # samp 8k
     #path="/home/hyun/works/QPSK/test.pcm"
     samps=SECLAB_pcm.loadPCM_16t(path,8000*10)/32700 #+0j
     #samps=SECLAB_pcm.loadPCM(path,dtype=np.int16,_count=8000*10)/32000 #+0j
@@ -650,6 +650,7 @@ def test_waveview () :
     plot_power(f,pxx,'waveview AMDET')
     #plot_power(y,'waveview AM DET') 
     
+    global Sxx
     f, t, Sxx = signal.spectrogram(samps, samp_rate)#, return_onesided=True)
     plt.pcolormesh(t, f, Sxx, shading='gouraud')
     plt.show()

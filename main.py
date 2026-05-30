@@ -204,7 +204,6 @@ class MainWindow(plot_window, plot_widget_class) :
         self.total_samples_n=0
         self.samples=np.ndarray(1)
         self.path=None
-        #self.setName
         #rect = QGraphicsRectItem(QRectF(0, 0, 1, 5e-11))
         #rect.setPen(pg.mkPen(100, 200, 100))
         #self.plot.addItem(rect)
@@ -224,7 +223,7 @@ class MainWindow(plot_window, plot_widget_class) :
         #self.plot.setXRange(0, 2)
         #self.plot.setYRange(0, 1e-10)
         #self.update_plot_samples(samp, samp_rate)
-        self.load_file("/home/hyun/psk8_8k_16t.pcm")
+        self.load_file("/home/hyun/works/wvt/psk8_8k_16t.pcm")
         #self.load_file("/home/hyun/works/wvt/test.wav")
         
     def load_file(self, _path):
@@ -293,6 +292,19 @@ class MainWindow(plot_window, plot_widget_class) :
         self.horizontalScrollBar.setMinimum(0)
         pass
     
+    
+    @pyqtSlot()    
+    def on_radioButton_time_domain_clicked(self):                   
+        print("clicked")
+        
+    @pyqtSlot()    
+    def on_radioButton_spectrogram_clicked(self):                   
+        print("clicked")
+        image_item = pg.ImageItem(image_data)
+        plot_widget = pg.PlotWidget()
+        #plot_widget.addItem(image_item)
+        #plot_widget.show()
+        
     @pyqtSlot()    
     def on_lineEdit_width_textEdited(self, _txt):                   
         print(_txt)
