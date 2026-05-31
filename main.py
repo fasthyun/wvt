@@ -100,6 +100,7 @@ class plotwidget(pg.PlotWidget):
         super().__init__() # python3
         self.vlines=[]
         self.parent=_parent
+        self.getViewBox().setMouseEnabled(x=False, y=False) # panning Disable!
         
         # 방법 A: 단일 문자 (w: 흰색, k: 검은색, r: 빨간색, g: 초록색, b: 파란색 등)
         #plot_widget.setBackground('w')
@@ -204,6 +205,7 @@ class MainWindow(plot_window, plot_widget_class) :
         self.total_samples_n=0
         self.samples=np.ndarray(1)
         self.path=None
+        self.plot_mode=0 # 0:time 1:sptectorgram
         #rect = QGraphicsRectItem(QRectF(0, 0, 1, 5e-11))
         #rect.setPen(pg.mkPen(100, 200, 100))
         #self.plot.addItem(rect)
@@ -259,7 +261,11 @@ class MainWindow(plot_window, plot_widget_class) :
         for i, plt in enumerate(self.plots):
             if i < self.rows_n:                
                 plt.clear()
-                plt.plot(self.samples[start_i:start_i+self.width],pen="k")
+                if self.plot_mode == 0 :
+                    plt.plot(self.samples[start_i:start_i+self.width],pen="k")
+                else:
+                    plt.plot(self.samples[start_i:start_i+self.width],pen="k")
+                    pass
                 start_i += self.width
                 print("start_i=",start_i)
                 plt.show()
@@ -282,6 +288,10 @@ class MainWindow(plot_window, plot_widget_class) :
     
     def update_ui(self):
         #self.setWindowTitle(self.path)
+        if self.plot_mode ==0 :
+            self.radioButton_time_domain.setChecked(True)
+        else:            
+            self.radioButton_spectrogram.setChecked(True)
         self.lineEdit_width.setText(str(self.width))
         self.lineEdit_samprate.setText(str(self.samprate))
         self.lineEdit_total_samples_n.setText(str(self.total_samples_n))
@@ -296,12 +306,16 @@ class MainWindow(plot_window, plot_widget_class) :
     @pyqtSlot()    
     def on_radioButton_time_domain_clicked(self):                   
         print("clicked")
+        self.plot_mode = 0
+        self.update_plots()
         
     @pyqtSlot()    
     def on_radioButton_spectrogram_clicked(self):                   
         print("clicked")
-        image_item = pg.ImageItem(image_data)
-        plot_widget = pg.PlotWidget()
+        self.plot_mode = 1 
+        self.update_plots()
+        #image_item = pg.ImageItem(image_data)
+        #plot_widget = pg.PlotWidget()
         #plot_widget.addItem(image_item)
         #plot_widget.show()
         
@@ -312,6 +326,7 @@ class MainWindow(plot_window, plot_widget_class) :
     @pyqtSlot()    
     def on_lineEdit_width_editingFinished(self):        
         self.width = int(self.lineEdit_width.text())
+        
         self.update_plots()
         #print("value",self.width)
         
@@ -319,6 +334,7 @@ class MainWindow(plot_window, plot_widget_class) :
     @pyqtSlot()
     def on_pushButton_powerspectrum_clicked(self):
         print("clicked!")    
+        
         self.powerspectrum_window.show()
         
     @pyqtSlot()

@@ -142,13 +142,14 @@ def waveview_power(samps,samp_rate,power_n=2):
      - 이해도: 90%
      - 미리 업샘플하는 이유: ok
     TODO:
-      - if complex input!
+      - if complex input! how distingush Real, complex? need the concept! 
       - signal.resample_poly(samps, n, 1)
     """
     if power_n != 1 :
         #print("samps=",samps)
         samps=signal.hilbert(samps) # 90% if real than, convert to analytic
-        samps=waveview_filter(samps,power_n) # upsample 전 필터링, -0.45 ~ 0.45 만 살림
+        # without this, result is better!
+        #samps=waveview_filter(samps,power_n) # upsample 전 필터링, -0.45 ~ 0.45 만 살림
         samps=signal.resample(samps,len(samps)*power_n) # upsample
         samp_rate *= power_n # upsample결과 샘플레이트가 power_n만큼 커짐!
         samps=np.power(samps,power_n) # 99% ok !!
@@ -177,7 +178,8 @@ def rotator(samps,deg):
     정말 신기하게도 samp_rate 와 상관없다는거
     (이미 샘플링되면서 위상과 회전 각 크기가 정해졌기 때문)
     
-    *이름문제점: 각도가 추가 회전하는게 아니라 가속도가 붙기때문에 이름이 rotator가 맞지않는다. 가속기라고 바꿔야할듯
+    *이름문제점: 각도가 추가 회전하는게 아니라 가속도가 붙기때문에 이름이 rotator가 맞지않는다. 
+      가속기라고 바꿔야할듯
     
     TODO
      - 느림...
@@ -405,10 +407,12 @@ def resample_with_fft(_samps, n=2):
     
     return 
 
-def test_spectrogram(chunk):
+def plot_spectrogram(samps,samprate):
     """ signal.스펙트로그램 함수는 대체 뭘까 ? (hyun)  """
-    f, t, Sxx   = signal.spectrogram(chunk, fs=10000, mode="magnitude")
-    plt.pcolormesh(t, f, Sxx)
+    f, t, Sxx   = signal.spectrogram(samps, fs=samprate, mode="magnitude")
+    #f, t, Sxx = signal.spectrogram(samps, samp_rate)#, return_onesided=True)
+    plt.pcolormesh(t, f, Sxx, shading='gouraud')
+    #plt.pcolormesh(t, f, Sxx)
     plt.ylabel("Frequency")
     plt.xlabel("Time")
     plt.show()
@@ -650,10 +654,7 @@ def test_waveview () :
     plot_power(f,pxx,'waveview AMDET')
     #plot_power(y,'waveview AM DET') 
     
-    global Sxx
-    f, t, Sxx = signal.spectrogram(samps, samp_rate)#, return_onesided=True)
-    plt.pcolormesh(t, f, Sxx, shading='gouraud')
-    plt.show()
+    plot_spectrogram(samps, samp_rate)
     
 
 def test_compare_periodgram(samps)     :
