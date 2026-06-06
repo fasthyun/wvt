@@ -26,14 +26,14 @@ import numpy as np
 from scipy import signal
 import matplotlib.pyplot as plt 
 
-def plot_time(s,_title = None):
+def plot_time(s,_title = None): # (x=time, y=power)
     plt.plot(s,linewidth=0.5)
     plt.xlabel('time [s]')
     plt.title(_title)
     plt.margins(x=0) # tight!
     plt.show()
 
-def plot_power(f,pxx,_title):
+def plot_power(f,pxx,_title): # spectrogram (x=freq, y=power)
     """      
      * for PowerSpectrum with semilog.
      * no time domain!
@@ -83,17 +83,6 @@ def waveview_filter(_samps,factor): # (60%,hyun)
     filt_samps=signal.lfilter(tabs,1.0,_samps)
     return filt_samps 
 
-def periodgram(_samps,n=1024):    
-    """
-    real or complex will works!
-    """
-    n=n*2-1
-    f,spec_den=signal.periodogram(_samps,fs=1,nfft=n,window="hamming") # no shift !!! nperseg=n,
-    #fft_shift=np.fft.fftshift(spec_den) 
-    log_fft=np.log10(spec_den)
-    #abs_fft=np.abs(log_fft)
-    return log_fft
-
 
 def waveview_periodgram(samps,fs,fft_size=1024,_return_onesided=False):
     """ 
@@ -107,6 +96,7 @@ def waveview_periodgram(samps,fs,fft_size=1024,_return_onesided=False):
      - waveview periodgram은 python periodgram과 같음 ???? , 아마도 matlab periodgram도 같을듯..    
      - 입력 샘플이  real일 경우 절반만 리턴(default!)   <--- 맞나??? 
      - real or complex will works!
+     - why welch? vs periodgram?
     
     parameters
      - fs : samp_rate
@@ -160,8 +150,8 @@ def waveview_power(samps,samp_rate,power_n=2):
 def waveview_AM_DET(samps,samp_rate,fft_size=1024,half=True):
     """
     참고: 
-     AM_DETECT()    
-       Floats real = MagnitudeSquared.create(outComplexFloats);
+     AM_DETECT() why? am_detect ??? 
+       Floats real = MagnitudeSquared(outComplexFloats);
        outComplexFloats = ComplexFloatsFromFloats.create(real, null);
     """
     samps=signal.hilbert(samps)  
@@ -257,17 +247,7 @@ def waveview_power2_FM(samps,samp_rate,half=True):
     samp_rate*=1    # 맞나???
     return samps    
 
-def test_periodgram(chunk,_fs=8e3):
-    f, pxx = signal.periodogram(chunk, fs=_fs, window="flattop", scaling="spectrum")
-    print( f[pxx.argmax()], pxx.argmax() )
-    #plt.plot(f, 20*np.log10(np.abs(Pxx_den)))
-    plt.semilogy(f, pxx)
-    #plt.ylim([1, 1e7])
-    plt.xlabel("Frequency")
-    plt.ylabel("PSD")
-    plt.show()
-    
-def test_compare_periodgram(samps,fs=1000):
+def test_compare_welch_periodgram(samps,fs=1000):
     """ 
       welch 와 periodgram 함수 비교
       1. 똑 같은거 같음
@@ -411,7 +391,7 @@ def plot_spectrogram(samps,samprate):
     """ signal.스펙트로그램 함수는 대체 뭘까 ? (hyun)  """
     f, t, Sxx   = signal.spectrogram(samps, fs=samprate, mode="magnitude")
     #f, t, Sxx = signal.spectrogram(samps, samp_rate)#, return_onesided=True)
-    plt.pcolormesh(t, f, Sxx, shading='gouraud')
+    plt.pcolormesh(t, f, Sxx, shading='gouraud') 
     #plt.pcolormesh(t, f, Sxx)
     plt.ylabel("Frequency")
     plt.xlabel("Time")

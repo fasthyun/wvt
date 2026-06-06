@@ -20,6 +20,19 @@ from SECLAB_signal import waveview_power
 from SECLAB_signal import waveview_periodgram
 from SECLAB_pcm import loadPCM
 
+from scipy import signal
+
+try: 
+    import filetype
+except Exception as e :
+    print(" Warning: filetype module failed")
+    pass
+
+try: 
+    import soundfile as sf
+except Exception as e :
+    print(" Warning: soundfile module failed no Mp3 file")
+    pass
 
 #switchbox_widget, switchbox_widget_class = uic.loadUiType('switchbox.ui')
 top_widget, widget_class = uic.loadUiType('main.ui')
@@ -101,7 +114,13 @@ class plotwidget(pg.PlotWidget):
         self.vlines=[]
         self.parent=_parent
         self.getViewBox().setMouseEnabled(x=False, y=False) # panning Disable!
+        # 5. Handle Image Display and Axis Scaling
+        self.img_item = pg.ImageItem()
         
+        self.img_item.setVisible(False)
+        #self.flag_mode=0 # 0: time , 1:spectrogram
+        
+        self.samples=[]
         # 방법 A: 단일 문자 (w: 흰색, k: 검은색, r: 빨간색, g: 초록색, b: 파란색 등)
         #plot_widget.setBackground('w')
 
@@ -109,6 +128,22 @@ class plotwidget(pg.PlotWidget):
         self.setBackground((255, 255, 255)) # 흰색
         # plot_widget.setBackground((255, 255, 255, 100)) # 알파 채널을 통한 투명도 조절
 
+    def update_plot(self):
+        if self.parent.plot_mode ==0:            
+            self.img_item.setVisible(False)
+            self.plot(self.samples,pen="k")
+            #.plot(self.samples[start_i:start_i+self.width],pen="k")
+        else:
+            self.img_item.setVisible(True)
+            self.img_item.setOpts(axisOrder='row-major')
+            self.addItem(self.img_item)            
+            f, t, Sxx   = signal.spectrogram(self.samples, fs=self.parent.samprate, mode="magnitude")
+            # Scale the image coordinates bounding box to match our actual time & frequency arrays
+            # Rect argument format: [x_start, y_start, x_width, y_height]
+            rect = pg.QtCore.QRectF(t[0], f[0], t[-1] - t[0], f[-1] - f[0])
+            self.img_item.setRect(rect)
+            self.img_item.setImage(Sxx) #sxx_dB
+            pass
         
     def on_vline_changed(self):
         self.parent.update_selected_region(self.vlines)
@@ -261,19 +296,19 @@ class MainWindow(plot_window, plot_widget_class) :
         self.total_samples_n=len(_samp)                
         
     def update_plots(self):
-        self.rows_n = int(self.total_samples_n / self.width)        
+        self.rows_n = int(self.total_samples_n / self.width)
+        if self.rows_n==0 :
+            self.rows_n = 1
         self.update_ui()
         start_i=0
         for i, plt in enumerate(self.plots):
             if i < self.rows_n:                
                 plt.clear()
-                if self.plot_mode == 0 :
-                    plt.plot(self.samples[start_i:start_i+self.width],pen="k")
-                else:
-                    plt.plot(self.samples[start_i:start_i+self.width],pen="k")
-                    pass
+                _end=start_i+self.width
+                plt.samples=self.samples[start_i: _end]
+                plt.update_plot()
+                print("start_i=",start_i,_end)
                 start_i += self.width
-                print("start_i=",start_i)
                 plt.show()
             else:
                 plt.hide()
@@ -303,11 +338,11 @@ class MainWindow(plot_window, plot_widget_class) :
         self.lineEdit_total_samples_n.setText(str(self.total_samples_n))
         self.lineEdit_row.setText(str(self.rows_n))
         self.lineEdit_filepath.setText(self.path)
+        
         page_n=self.total_samples_n/self.width/self.rows_n
         self.horizontalScrollBar.setMaximum(int(page_n))
         self.horizontalScrollBar.setMinimum(0)
-        pass
-    
+        pass    
     
     @pyqtSlot()    
     def on_radioButton_time_domain_clicked(self):                   
@@ -326,13 +361,8 @@ class MainWindow(plot_window, plot_widget_class) :
         #plot_widget.show()
         
     @pyqtSlot()    
-    def on_lineEdit_width_textEdited(self, _txt):                   
-        print(_txt)
-    
-    @pyqtSlot()    
     def on_lineEdit_width_editingFinished(self):        
-        self.width = int(self.lineEdit_width.text())
-        
+        self.width = int(self.lineEdit_width.text())        
         self.update_plots()
         #print("value",self.width)
         
