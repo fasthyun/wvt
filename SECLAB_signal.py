@@ -97,7 +97,7 @@ def periodgram(_samps,n=1024):
 
 def waveview_periodgram(samps,fs,fft_size=1024,_return_onesided=False):
     """ 
-    waveview's power spectrum! 
+    waveview's powerspectrum! 
     ==========================
     
     * 작성자 : hyun
@@ -419,7 +419,7 @@ def plot_spectrogram(samps,samprate):
 
 from scipy import fftpack
 
-def test_plot_powerspectrogram(chunk):
+def test_plot_compare_powerspectrogram(chunk):
     """  
     np.fft 이거 왜...
     """
@@ -522,7 +522,7 @@ def test_rotator():
     """
     
     import SECLAB_pcm
-    path="/home/sdr/data/Documents/presetation/K-10191116H0005_G126Z_467.500_0130_0131_16t_160k.pcm.real.160k.16t"
+    path="/home/sdr/data/Documents/presetation/sample_16t_160k.pcm.real.160k.16t"
     samp_rate=160e3
     samps=SECLAB_pcm.loadPCM_16t(path,20000) #
     samps=samps[5000:9000]
@@ -547,7 +547,7 @@ def test_cplx2real():
      * 샘플갯수가 2배가 되네...와....진짜 깬다....(hyun) 
     """
     import SECLAB_wave
-    _path="/home/signal/ddc/K7906/220526_i0085var-235MHz_22-05-11_09'26'56_80k.ddc" # complex, samp_rate= 100k,
+    _path="/home/signal/ddc/sample_80k.ddc" # complex, samp_rate= 100k,
     
     _parser= SECLAB_wave.parseHeader(_path)
     samp_rate= _parser['sample_rate']
@@ -591,7 +591,7 @@ def test_fftfreq():
     """
     import SECLAB_wave
     global _samps
-    _path="/home/signal/ddc/K7906/220526_i0085var-235MHz_22-05-11_09'26'56_80k.ddc" # complex, samp_rate= 100k,    
+    _path="/home/signal/sample_80k.ddc" # complex, samp_rate= 100k,    
     
     _parser= SECLAB_wave.parseHeader(_path)
     samp_rate= _parser['sample_rate']

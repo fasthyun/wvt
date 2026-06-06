@@ -163,7 +163,7 @@ class PowerSpectrumWindow(powerspectrum_window, powerspectrum_widget_class) :
     #def set_samples(self, _samps):
     #    self.samps=_samps
         
-    def update_powerspectrum(self, h=1):
+    def update_powerspectrum(self, _n=1):
         _samps = self.samples[self.start_pos:self.end_pos]
         _N=int(self.lineEdit_power_N.text())
         _samps,_samp_rate=waveview_power(_samps,self.samprate,_N)
@@ -190,8 +190,14 @@ class PowerSpectrumWindow(powerspectrum_window, powerspectrum_widget_class) :
     
     @pyqtSlot()
     def on_pushButton_power1_clicked(self):
-        self.plot_powerspectrum(1)
+        #self.plot_powerspectrum(1)
         print("clicked!")
+    
+    @pyqtSlot()
+    def on_lineEdit_power_N_editingFinished(self):
+        _N=int(self.lineEdit_power_N.text())
+        self.update_powerspectrum(_N)
+        print("power N updated", _N)
         
 class MainWindow(plot_window, plot_widget_class) :
     def __init__(self) :
