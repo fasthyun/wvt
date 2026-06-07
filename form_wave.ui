@@ -142,7 +142,7 @@
            </widget>
           </item>
           <item row="4" column="1">
-           <widget class="QLineEdit" name="lineEdit_row">
+           <widget class="QLineEdit" name="lineEdit_rows_per_page">
             <property name="text">
              <string>1</string>
             </property>
@@ -235,7 +235,7 @@
           <item row="4" column="0">
            <widget class="QLabel" name="label_2">
             <property name="text">
-             <string>row</string>
+             <string>rows/page</string>
             </property>
            </widget>
           </item>
@@ -285,11 +285,15 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QVBoxLayout" name="verticalLayout_2"/>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="sizeConstraint">
+           <enum>QLayout::SetNoConstraint</enum>
+          </property>
+         </layout>
         </widget>
        </item>
        <item>
-        <widget class="QScrollBar" name="horizontalScrollBar">
+        <widget class="QScrollBar" name="pageScrollBar">
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
          </property>
@@ -306,7 +310,7 @@
      <x>0</x>
      <y>0</y>
      <width>1016</width>
-     <height>22</height>
+     <height>36</height>
     </rect>
    </property>
   </widget>
