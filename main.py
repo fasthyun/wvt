@@ -137,7 +137,7 @@ class plotwidget(pg.PlotWidget):
             self.img_item.setVisible(True)
             self.img_item.setOpts(axisOrder='row-major')
             self.addItem(self.img_item)            
-            f, t, Sxx   = signal.spectrogram(self.samples, fs=self.parent.samprate, mode="magnitude")
+            f, t, Sxx   = signal.spectrogram(self.samples,nperseg=self.parent.nperseg, fs=self.parent.samprate, mode="magnitude")
             # Scale the image coordinates bounding box to match our actual time & frequency arrays
             # Rect argument format: [x_start, y_start, x_width, y_height]
             if len(t) < 2 :
@@ -257,6 +257,7 @@ class MainWindow(plot_window, plot_widget_class) :
         print("DEBUG:MainWindow.init() ",widget_class)
         super().__init__() # python3
         self.setupUi(self)
+        self.nperseg=256
         self.rows_n = 1
         self.width  = 2000
         self.start_pos=0
@@ -337,8 +338,7 @@ class MainWindow(plot_window, plot_widget_class) :
         
         self.total_rows_n = int(np.ceil(self.total_samples_n / self.width))
             
-    def update_pages(self):
-        
+    def update_pages(self):        
         self.total_pages=int(self.total_rows_n/self.rows_per_page)  + 1 
         #print("total_pages=",self.total_pages)
         self.pageScrollBar.setMaximum(self.total_pages) #
@@ -446,14 +446,19 @@ class MainWindow(plot_window, plot_widget_class) :
         self.update_pages()
         #print("value",self.width)
         
-
+    
     @pyqtSlot()    
     def on_lineEdit_rows_per_page_editingFinished(self):        
         self.rows_per_page = int(self.lineEdit_rows_per_page.text())        
         self.update_pages()
         #print("value",self.width)
         
-    
+    @pyqtSlot(int)    
+    def on_comboBox_nperseg_currentIndexChanged(self,_idx):
+        self.nperseg = int(self.comboBox_nperseg.itemText(_idx))
+        self.update_pages()
+        
+        
     @pyqtSlot(int)
     def on_pageScrollBar_valueChanged(self,_val):
         print("page = ",self.pageScrollBar.value())    

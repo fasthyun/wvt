@@ -596,8 +596,7 @@ def test_waveview () :
     """
     - waveview 주요기능을 그대로 구현 (hyun)
     """        
-    import SECLAB_pcm
-    #path="230.30Mhz.pcm.real.160k.16t"
+    import SECLAB_pcm    
     path="/home/hyun/works/wvt/psk8_8k_16t.pcm" # samp 8k
     #path="/home/hyun/works/QPSK/test.pcm"
     samps=SECLAB_pcm.loadPCM_16t(path,8000*10)/32700 #+0j
@@ -634,7 +633,9 @@ def test_waveview () :
     plot_power(f,pxx,'waveview AMDET')
     #plot_power(y,'waveview AM DET') 
     
+    
     plot_spectrogram(samps, samp_rate)
+    plot_spectrogram(samps[0:8000], samp_rate)
     
 
 def test_compare_periodgram(samps)     :
