@@ -112,15 +112,25 @@ class plotwidget(pg.PlotWidget):
     def __init__(self,_parent) :
         super().__init__() # python3
         self.vlines=[]
+        #plot_item = plot_widget
+        #self.plot_item = self.getPlotItem()
+        self.data_item=pg.PlotDataItem([], [], pen='b')
+        self.addItem(self.data_item)
+        self.index =None
         self.parent=_parent
+        self.x_data=np.array([])
+        self.y_data=np.array([])
+        
+        
         self.getViewBox().setMouseEnabled(x=False, y=False) # panning Disable!
         # 5. Handle Image Display and Axis Scaling
         self.img_item = pg.ImageItem()
-        
         self.img_item.setVisible(False)
+        self.addItem(self.img_item)
         #self.flag_mode=0 # 0: time , 1:spectrogram
         
         self.samples=[]
+        #self.disableAutoRange()
         # 방법 A: 단일 문자 (w: 흰색, k: 검은색, r: 빨간색, g: 초록색, b: 파란색 등)
         #plot_widget.setBackground('w')
 
@@ -129,42 +139,62 @@ class plotwidget(pg.PlotWidget):
         # plot_widget.setBackground((255, 255, 255, 100)) # 알파 채널을 통한 투명도 조절
 
     def update_plot(self):
-        if self.parent.plot_mode ==0:            
+        """
+        need new design...
+
+        Returns
+        -------
+        TYPE
+            DESCRIPTION.
+
+        """
+        if type(self.index) != np.ndarray  :
+            return  #temp 
+        
+        if self.parent.plot_mode ==0: # time domain
             self.img_item.setVisible(False)
-            self.plot(self.index, self.samples,pen="b")
-            #.plot(self.samples[start_i:start_i+self.width],pen="k")
+            self.data_item.setVisible(True)
         else:
-            self.img_item.setVisible(True)
-            self.img_item.setOpts(axisOrder='row-major')
-            self.addItem(self.img_item)            
-            f, t, Sxx   = signal.spectrogram(self.samples,nperseg=self.parent.nperseg, fs=self.parent.samprate, mode="magnitude")
-            # Scale the image coordinates bounding box to match our actual time & frequency arrays
-            # Rect argument format: [x_start, y_start, x_width, y_height]
-            if len(t) < 2 :
-                return
-            rect = pg.QtCore.QRectF(self.index[0], f[0], self.index[-1] - self.index[0], f[-1] - f[0])
-            self.img_item.setRect(rect)
-            self.img_item.setImage(Sxx) #sxx_dB
-            #hist = pg.HistogramLUTItem()
-            #hist.setImageItem(self.img_item)
-            #self.addItem(hist)
-            # Load a high-contrast colormap (e.g., 'viridis')
-            #hist.gradient.loadPreset('viridis')
-            # Fit the initial color window sliders safely across min/max dB bounds
-            #hist.setLevels(np.min(Sxx), np.max(Sxx)) # dB
+            self.img_item.setVisible(True) # spectorgram!    
+            self.data_item.setVisible(False)
             
-            # 6. Apply a built-in Colormap & add a interactive Color Bar
-            # Available built-in colorMap profiles include: 'viridis', 'plasma', 'magma', 'inferno'
-            #self.addColorBar(self.img_item, colorMap='viridis', values=(Sxx.min(), Sxx.max()))
-            # 5. Apply colormap (WITHOUT attaching a ColorBarItem)
-            colormap = pg.colormap.get('magma') # Try 'magma', 'turbo', 'thermal'
-            self.img_item.setLookupTable(colormap.getLookupTable())
+        if np.array_equal(self.x_data, self.index) and np.array_equal(self.y_data, self.samples):
+            return
+    
+        self.data_item.setData(self.index,self.samples,pen="b")
+        self.x_data=self.index
+        self.y_data=self.samples # hmmm
+        #self.plot(self.index, self.samples,pen="b")
+        #.plot(self.samples[start_i:start_i+self.width],pen="k")
 
-
-            pass
+        self.img_item.setOpts(axisOrder='row-major')
+                    
+        f, t, Sxx   = signal.spectrogram(self.samples,nperseg=self.parent.nperseg, fs=self.parent.samprate, mode="magnitude")
+        # Scale the image coordinates bounding box to match our actual time & frequency arrays
+        # Rect argument format: [x_start, y_start, x_width, y_height]
+        if len(t) < 2 :
+            return
+        rect = pg.QtCore.QRectF(self.index[0], f[0], self.index[-1] - self.index[0], f[-1] - f[0])
+        self.img_item.setRect(rect)
+        self.img_item.setImage(Sxx) #sxx_dB
+        #hist = pg.HistogramLUTItem()
+        #hist.setImageItem(self.img_item)
+        #self.addItem(hist)
+        # Load a high-contrast colormap (e.g., 'viridis')
+        #hist.gradient.loadPreset('viridis')
+        # Fit the initial color window sliders safely across min/max dB bounds
+        #hist.setLevels(np.min(Sxx), np.max(Sxx)) # dB
+        
+        # 6. Apply a built-in Colormap & add a interactive Color Bar
+        # Available built-in colorMap profiles include: 'viridis', 'plasma', 'magma', 'inferno'
+        #self.addColorBar(self.img_item, colorMap='viridis', values=(Sxx.min(), Sxx.max()))
+        # 5. Apply colormap (WITHOUT attaching a ColorBarItem)
+        colormap = pg.colormap.get('magma') # Try 'magma', 'turbo', 'thermal'
+        self.img_item.setLookupTable(colormap.getLookupTable())
+        
         
     def on_vline_changed(self):
-        self.parent.update_selected_region(self.vlines)
+        self.parent.update_selected_region()
         #print("moved!")
         
     def mousePressEvent(self, event):        
@@ -177,13 +207,21 @@ class plotwidget(pg.PlotWidget):
             ##vpos = self.mapToView(event.pos())     
             vpos=self.plotItem.vb.mapSceneToView(scene_pos)
             #print(f"Clicked at scene coordinates: {scene_pos} {vpos}")
-            if len(self.vlines) < 2 :
-                _vline=pg.InfiniteLine(vpos, movable=True, angle=90, label='vlineX',pen= pg.mkPen(color=(255,0,0), width=2)) #vertical 
-                self.addItem(_vline)
-                self.vlines.append(_vline) 
-                _vline.sigPositionChanged.connect(self.on_vline_changed)
-                self.parent.update_selected_region(self.vlines)
+            while len(self.parent.vlines) >= 2 :
+                item =self.parent.vlines.pop(0)
+                _plt=item.parent
+                _plt.removeItem(item)
+                _plt.update()
                 
+            if len(self.parent.vlines) < 2 :
+                #_len=len(self.parent.vlines) 
+                _vline=pg.InfiniteLine(vpos, movable=True, angle=90, label="",pen= pg.mkPen(color=(255,0,0), width=2)) #vertical 
+                self.addItem(_vline)
+                _vline.parent=self
+                self.parent.vlines.append(_vline) 
+                _vline.sigPositionChanged.connect(self.on_vline_changed)
+                self.parent.update_selected_region()
+            
         # Call the base class implementation to keep standard behavior (like dragging)
         super().mousePressEvent(event)
     
@@ -220,7 +258,13 @@ class PowerSpectrumWindow(powerspectrum_window, powerspectrum_widget_class) :
         _samps = self.samples[self.start_pos:self.end_pos]
         _N=int(self.lineEdit_power_N.text())
         _samps,_samp_rate=waveview_power(_samps,self.samprate,_N)
-        f,pxx=waveview_periodgram(_samps,_samp_rate,1024,True)
+        _samps_n=len(_samps)
+        if _samps_n == 0 :
+            return
+        # Calculate the nearest power of 2 less than or equal to x
+        _n = 2 ** np.floor(np.log2(_samps_n)).astype(int)
+        print("samps_n=",_samps_n,_n)
+        f,pxx=waveview_periodgram(_samps,_samp_rate,_n,True)
         self.plot.clear()
         self.plot.setLogMode(x=False, y=True)
         self.plot.plot(x=f,y=pxx)
@@ -257,6 +301,7 @@ class MainWindow(plot_window, plot_widget_class) :
         print("DEBUG:MainWindow.init() ",widget_class)
         super().__init__() # python3
         self.setupUi(self)
+        self.vlines=[]
         self.nperseg=256
         self.rows_n = 1
         self.width  = 2000
@@ -275,7 +320,7 @@ class MainWindow(plot_window, plot_widget_class) :
         self.powerspectrum_window=PowerSpectrumWindow()
         self.powerspectrum_window.hide()
         self.plots=[]
-        for i in range(5):
+        for i in range(32):
             #plt= pg.PlotWidget()
             plt= plotwidget(self)
             self.plots.append(plt)
@@ -338,28 +383,51 @@ class MainWindow(plot_window, plot_widget_class) :
         
         self.total_rows_n = int(np.ceil(self.total_samples_n / self.width))
             
-    def update_pages(self):        
-        self.total_pages=int(self.total_rows_n/self.rows_per_page)  + 1 
-        #print("total_pages=",self.total_pages)
-        self.pageScrollBar.setMaximum(self.total_pages) #
-        
+    def update_current_page(self):
         self.current_page=self.pageScrollBar.value()
         for i, plt in enumerate(self.plots):
             tmp_page = int(i / self.rows_per_page) 
-            if  self.current_page == tmp_page :                
+            if  self.current_page == tmp_page :
+                plt.update_plot()
                 plt.show()
             else:
                 plt.hide()
             pass
+        
+    def update_pages(self):   
+        """
+        * update current page's plot
+
+        Returns
+        -------
+        None.
+
+        """
+        self.total_pages=round(self.total_rows_n/self.rows_per_page) -1
+        print("total_pages=",self.total_pages,self.total_rows_n)
+        self.pageScrollBar.setMaximum(self.total_pages) #
+        self.update_current_page()
+        
         pass
     
     def update_plots(self):
+        """
+         
+        * apply new samples  (slow)
+          -make index
+          -make plot
+        * reset plots !
+        
+        Returns
+        -------
+        None.
+
+        """
         self.total_rows_n = int(np.ceil(self.total_samples_n / self.width)) 
         if self.total_rows_n==0 :
             self.total_rows_n = 1
         
         self.update_pages()
-        #self.current_page=self.pageScrollBar.value()
     
         self.update_ui()
         
@@ -372,7 +440,7 @@ class MainWindow(plot_window, plot_widget_class) :
         for i in range(self.total_rows_n):
             plt=self.plots[i]
         #for i, plt in enumerate(self.plots):
-            plt.clear()
+            #plt.clear()
             _end=start_i+self.width
             plt.samples = self.samples[start_i: _end]
             if len(plt.samples) < self.width :
@@ -384,17 +452,14 @@ class MainWindow(plot_window, plot_widget_class) :
             
             plt.update_plot()
             print("start_i=",start_i,_end)
-            start_i += self.width 
-            tmp_page = int(i / self.rows_per_page) 
-            if  self.current_page == tmp_page :                
-                plt.show()
-            else:
-                plt.hide()
-            pass
+            start_i += self.width
+            
+        self.update_current_page()
         
-    def update_selected_region(self, vlines):
+
+    def update_selected_region(self):
         _values=[]
-        for line in vlines:
+        for line in self.vlines:
             _values.append(int(line.value()))
             #print(line.value())
         _values.sort()        
@@ -456,6 +521,7 @@ class MainWindow(plot_window, plot_widget_class) :
     @pyqtSlot(int)    
     def on_comboBox_nperseg_currentIndexChanged(self,_idx):
         self.nperseg = int(self.comboBox_nperseg.itemText(_idx))
+        print("nperseg=", self.nperseg)
         self.update_pages()
         
         
