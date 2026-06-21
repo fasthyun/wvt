@@ -117,6 +117,7 @@ class plotwidget(pg.PlotWidget):
         self.data_item=pg.PlotDataItem([], [], pen='b')
         self.addItem(self.data_item)
         self.index =None
+        self.nperseg = 2
         self.parent=_parent
         self.x_data=np.array([])
         self.y_data=np.array([])
@@ -158,9 +159,10 @@ class plotwidget(pg.PlotWidget):
             self.img_item.setVisible(True) # spectorgram!    
             self.data_item.setVisible(False)
             
-        if np.array_equal(self.x_data, self.index) and np.array_equal(self.y_data, self.samples):
-            return
-    
+        if np.array_equal(self.x_data, self.index) and np.array_equal(self.y_data, self.samples) :
+            if self.nperseg == self.parent.nperseg :
+                return
+        
         self.data_item.setData(self.index,self.samples,pen="b")
         self.x_data=self.index
         self.y_data=self.samples # hmmm
@@ -353,8 +355,8 @@ class MainWindow(plot_window, plot_widget_class) :
             # float64, int32, int16, uint8
             samp_rate, samps = wavfile.read(_path)
         elif _path.lower().endswith((".mp3")):
-            # Load directly into a NumPy array
-            samps, samp_rate = sf.read(_path)
+            # Load directly into a NumPy array using Soundfile
+            samps, samp_rate = sf.read(_path) 
         else:
             #samp_rate, samp = load_wav(_path)
             samps,samp_rate,_dtype,_cplx_flag = loadPCM(_path,dtype=">i2")
