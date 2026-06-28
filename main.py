@@ -351,6 +351,9 @@ class MainWindow(plot_window, plot_widget_class) :
         print('File MIME type: %s' % kind.mime)
         """ 
         #    print("This is a supported image file.")
+        if _path == "":
+            return
+        
         if _path.lower().endswith((".wave", ".wav")):        
             # float64, int32, int16, uint8
             samp_rate, samps = wavfile.read(_path)
@@ -359,6 +362,7 @@ class MainWindow(plot_window, plot_widget_class) :
             samps, samp_rate = sf.read(_path) 
         else:
             #samp_rate, samp = load_wav(_path)
+            print("path=",_path)
             samps,samp_rate,_dtype,_cplx_flag = loadPCM(_path,dtype=">i2")
         
         if samp_rate ==0 :
@@ -548,9 +552,9 @@ class MainWindow(plot_window, plot_widget_class) :
     def on_pushButton_filepath_clicked(self):
         print("clicked!")
         _path,__=QFileDialog.getOpenFileName(self,"caption",".")
-        self.lineEdit_filepath.setText(_path)
         print(_path)
-    
+        self.load_file(_path)
+        self.lineEdit_filepath.setText(_path)
         
 print("DEBUG: before QApplication()")
 app = QApplication([])  # why ? hang here????
